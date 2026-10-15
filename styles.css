@@ -1,0 +1,127 @@
+body {
+  margin: 0;
+  padding: 60px;
+  background-color: black;
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+main {
+  max-width: 900px;
+}
+
+.drawer-toggle,
+.drawer-close {
+  border: 1px solid white;
+  color: white;
+  background: black;
+  font: inherit;
+  cursor: pointer;
+}
+
+.drawer-toggle {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+}
+
+.side-drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 4;
+  box-sizing: border-box;
+  width: min(320px, 85vw);
+  padding: 24px;
+  border-right: 1px solid white;
+  background: black;
+  transform: translateX(-100%);
+  transition: transform 180ms ease-out;
+}
+
+.side-drawer.is-open {
+  transform: translateX(0);
+}
+
+.drawer-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid white;
+  font-size: 18px;
+}
+
+.drawer-close {
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.side-drawer nav {
+  display: grid;
+  gap: 4px;
+  padding-top: 18px;
+}
+
+.drawer-link {
+  padding: 12px 10px;
+  color: white;
+  text-decoration: none;
+}
+
+.drawer-link:hover,
+.drawer-link:focus-visible {
+  outline: 1px solid white;
+  background: white;
+  color: black;
+}
+
+.drawer-backdrop:not([hidden]) {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  background: rgb(0 0 0 / 65%);
+}
+
+.text-field {
+  border: 4px dashed white;
+
+  padding: 20px;
+  color: white;
+  background-color: black;
+}
+
+.stars {
+  color: cyan;
+}
+
+.converter {
+  margin-top: 40px;
+}
+
+.converter h3 {
+  margin-top: 0;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 72px 24px 32px;
+  }
+
+  .text-field {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-drawer {
+    transition: none;
+  }
+}
