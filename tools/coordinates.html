@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coordinate Converter</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <!-- navbar code -->
+  <button class="drawer-toggle" id="drawer-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="side-drawer">
+    <span aria-hidden="true">☰</span>
+  </button>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="side-drawer" id="side-drawer" aria-label="Site navigation" aria-hidden="true">
+    <div class="drawer-heading">
+      <span class="stars" aria-hidden="true">✶</span>
+      <span>navigation</span>
+      <button class="drawer-close" id="drawer-close" type="button" aria-label="Close navigation menu">×</button>
+    </div>
+    <nav aria-label="Tools">
+      <a class="drawer-link" href='/'>angle tools</a>
+      <a class="drawer-link" href='/tools/coordinates.html'>coord converter</a>
+      <a class="drawer-link" href='/tools/redshift.html'>redshift calc</a>
+    </nav>
+  </aside>
+
+  <!-- navbar end -->
+  <main>
+    
+    <h1><span class="stars">✶</span> astronomy swissknife</h1>
+    <h2 id="angle-tools"><span class="stars">✶✶</span> coordinate converter</h2>
+
+    <section class="converter">
+      <h3><span class="stars">✶✶✶</span> Right ascension: hours to degrees</h3>
+      <input id="i1" class="text-field" type="number" step="any" inputmode="decimal" value="6">
+      hours has been converted to <span id="o1">90.00000</span> degrees
+    </section>
+
+   
+
+    <section class="converter">
+      <h3><span class="stars">✶✶✶</span> Right ascension: Degrees to hours converter</h3>
+      <input id="i2" class="text-field" type="number" step="any" inputmode="decimal" value="90.00000">
+      Radians has been converted to <span id="o21">6</span> hours, <span id="o22">0</span> minutes, <span id="o23">0</span> seconds
+    </section>
+    <img class="figures" src="/public/rascension.jpg"></img>
+    <p>Figure for reference, the right ascension is measured from the celestial equator</p>
+  </main>
+
+  <script>
+    // hours to degrees
+    const i1 = document.getElementById('i1');
+    const o1 = document.getElementById('o1');
+
+    i1.addEventListener('input', () => {
+      const hours = i1.valueAsNumber;
+
+      if (Number.isNaN(hours)) {
+        o1.textContent = '';
+        return;
+      }
+
+      const degrees = (15*hours).toFixed(5);
+      o1.textContent = degrees;
+    });
+
+    const i2 = document.getElementById('i2');
+    const o21 = document.getElementById('o21');
+    const o22 = document.getElementById('o22');
+    const o23 = document.getElementById('o23');
+
+
+    i2.addEventListener('input', () => {
+      const degrees = i2.valueAsNumber;
+
+      if (Number.isNaN(degrees)) {
+        o21.textContent = '';
+        o22.textContent = '';
+        o23.textContent = '';
+        return;
+      }
+
+      const totalHours = degrees / 15;
+      const hours = Math.floor(totalHours);
+      const totalMinutes = (totalHours - hours) * 60;
+      const minutes = Math.floor(totalMinutes);
+      const seconds = ((totalMinutes - minutes) * 60).toFixed(5);
+
+      o21.textContent = hours;
+      o22.textContent = minutes;
+      o23.textContent = seconds;
+    });
+  </script>
+  <script src="../navbar.js"></script>
+</body>
+</html>

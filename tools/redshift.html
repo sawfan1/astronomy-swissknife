@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redshift Predictor</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <!-- navbar code -->
+  <button class="drawer-toggle" id="drawer-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="side-drawer">
+    <span aria-hidden="true">☰</span>
+  </button>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="side-drawer" id="side-drawer" aria-label="Site navigation" aria-hidden="true">
+    <div class="drawer-heading">
+      <span class="stars" aria-hidden="true">✶</span>
+      <span>navigation</span>
+      <button class="drawer-close" id="drawer-close" type="button" aria-label="Close navigation menu">×</button>
+    </div>
+    <nav aria-label="Tools">
+      <a class="drawer-link" href='/'>angle tools</a>
+      <a class="drawer-link" href='/tools/coordinates.html'>coord converter</a>
+      <a class="drawer-link" href='/tools/redshift.html'>redshift calc</a>
+    </nav>
+  </aside>
+
+  <!-- navbar end -->
+  <main>
+    
+    <h1><span class="stars">✶</span> astronomy swissknife</h1>
+    <h2 id="angle-tools"><span class="stars">✶✶</span> rgb redshift predictor</h2>
+
+    <section class="converter">
+      <h3><span class="stars">✶✶✶</span> Input Color</h3>
+      <input id="i1" aria-label="Input color" value="#fa23a2" type="color">
+      R: <span id="o1">250</span>, G: <span id="o2">35</span>, B: <span id="o3">162</span>
+
+      <h3 style="margin-top: 30px;">Source radial velocity (km/s)</h3>
+      <input id="i2" class="text-field" value="250" type="number" step="any" inputmode="decimal" aria-label="Source radial velocity in kilometers per second">
+
+      <h3 style="margin-top: 30px;">Observer radial velocity (km/s)</h3>
+      <input id="i3" class="text-field" value="0" type="number" step="any" inputmode="decimal" aria-label="Observer radial velocity in kilometers per second">
+      <p>Use positive values for motion that increases the source-observer separation and negative values for motion that decreases it. Each speed must be less than the speed of light.</p>
+      
+      <h3 style="margin-top: 30px;"><span class="stars">✶✶✶</span> Observed Color</h3>
+      <div id="observed-swatch" role="img" aria-label="Predicted observed color" style="background-color: #fa23a2; width: 40px; height: 40px; margin-bottom: 30px;"></div>
+      R: <span id="o4">250</span>, G: <span id="o5">35</span>, B: <span id="o6">162</span>
+      <p>Approximate wavelength: <span id="wavelength">—</span> nm</p>
+      <p id="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script>
+    const i1 = document.getElementById('i1');
+    const i2 = document.getElementById('i2');
+    const i3 = document.getElementById('i3');
+    const rgbOutputs = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6']
+      .map((id) => document.getElementById(id));
+    const wavelengthOutput = document.getElementById('wavelength');
+    const observedSwatch = document.getElementById('observed-swatch');
+    const status = document.getElementById('status');
+    const speedOfLightKmS = 299792.458;
+    const hueStops = [0, 60, 120, 180, 240, 300, 360];
+    const wavelengthStops = [700, 580, 530, 490, 450, 400, 700];
+
+    function hueToWavelength(hue) {
+      const normalizedHue = ((hue % 360) + 360) % 360;
+      const stop = hueStops.findIndex((value) => value > normalizedHue);
+      const index = stop === -1 ? hueStops.length - 2 : stop - 1;
+      const fraction = (normalizedHue - hueStops[index]) / (hueStops[index + 1] - hueStops[index]);
+
+      return wavelengthStops[index] + fraction * (wavelengthStops[index + 1] - wavelengthStops[index]);
+    }
+
+    function wavelengthToHue(wavelength) {
+      const visibleWavelength = Math.max(380, Math.min(700, wavelength));
+
+      for (let index = 0; index < wavelengthStops.length - 1; index += 1) {
+        const high = wavelengthStops[index];
+        const low = wavelengthStops[index + 1];
+        if (visibleWavelength <= high && visibleWavelength >= low) {
+          const fraction = (high - visibleWavelength) / (high - low);
+          return hueStops[index] + fraction * (hueStops[index + 1] - hueStops[index]);
+        }
+      }
+
+      return visibleWavelength < 400 ? 300 : 0;
+    }
+
+    function rgbToHsv(red, green, blue) {
+      const r = red / 255;
+      const g = green / 255;
+      const b = blue / 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const difference = max - min;
+      let hue = 0;
+
+      if (difference !== 0) {
+        if (max === r) hue = 60 * (((g - b) / difference) % 6);
+        else if (max === g) hue = 60 * ((b - r) / difference + 2);
+        else hue = 60 * ((r - g) / difference + 4);
+      }
+
+      return {
+        hue: (hue + 360) % 360,
+        saturation: max === 0 ? 0 : difference / max,
+        value: max
+      };
+    }
+
+    function hsvToRgb(hue, saturation, value) {
+      const chroma = value * saturation;
+      const section = hue / 60;
+      const secondary = chroma * (1 - Math.abs((section % 2) - 1));
+      let channels;
+
+      if (section < 1) channels = [chroma, secondary, 0];
+      else if (section < 2) channels = [secondary, chroma, 0];
+      else if (section < 3) channels = [0, chroma, secondary];
+      else if (section < 4) channels = [0, secondary, chroma];
+      else if (section < 5) channels = [secondary, 0, chroma];
+      else channels = [chroma, 0, secondary];
+
+      const offset = value - chroma;
+      return channels.map((channel) => Math.round((channel + offset) * 255));
+    }
+
+    function updatePrediction() {
+      const [red, green, blue] = i1.value.match(/[0-9a-f]{2}/gi)
+        .map((channel) => Number.parseInt(channel, 16));
+      const sourceVelocity = i2.valueAsNumber;
+      const observerVelocity = i3.valueAsNumber;
+
+      [red, green, blue].forEach((channel, index) => {
+        rgbOutputs[index].textContent = channel;
+      });
+
+      if (!Number.isFinite(sourceVelocity) || !Number.isFinite(observerVelocity)
+        || Math.abs(sourceVelocity) >= speedOfLightKmS
+        || Math.abs(observerVelocity) >= speedOfLightKmS) {
+        rgbOutputs.slice(3).forEach((output) => {
+          output.textContent = '';
+        });
+        wavelengthOutput.textContent = '—';
+        observedSwatch.style.backgroundColor = 'transparent';
+        status.textContent = `Enter finite velocities with absolute values below ${speedOfLightKmS} km/s.`;
+        return;
+      }
+
+      const sourceBeta = sourceVelocity / speedOfLightKmS;
+      const observerBeta = observerVelocity / speedOfLightKmS;
+      const relativeBeta = (sourceBeta + observerBeta) / (1 + sourceBeta * observerBeta);
+      const dopplerFactor = Math.sqrt((1 + relativeBeta) / (1 - relativeBeta));
+      const {hue, saturation, value} = rgbToHsv(red, green, blue);
+      const shiftedWavelength = hueToWavelength(hue) * dopplerFactor;
+      const observedRgb = hsvToRgb(wavelengthToHue(shiftedWavelength), saturation, value);
+
+      observedRgb.forEach((channel, index) => {
+        rgbOutputs[index + 3].textContent = channel;
+      });
+      observedSwatch.style.backgroundColor = `rgb(${observedRgb.join(', ')})`;
+      wavelengthOutput.textContent = shiftedWavelength.toFixed(2);
+      status.textContent = shiftedWavelength < 380 || shiftedWavelength > 700
+        ? 'The shifted wavelength is outside the visible spectrum; the swatch shows the nearest visible hue.'
+        : 'The swatch is an approximate hue shift; RGB colors do not correspond to a unique wavelength.';
+    }
+
+    [i1, i2, i3].forEach((input) => {
+      input.addEventListener('input', updatePrediction);
+    });
+    updatePrediction();
+  </script>
+  <script src="../navbar.js"></script>
+</body>
+</html>

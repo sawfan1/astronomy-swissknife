@@ -125,3 +125,8 @@ main {
     transition: none;
   }
 }
+
+.figures {
+  border: 2px solid white;
+  margin: 30px 0px;
+}
