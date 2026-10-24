@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blackbody Radiation Calculator</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <button class="drawer-toggle" id="drawer-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="side-drawer">
+    <span aria-hidden="true">☰</span>
+  </button>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="side-drawer" id="side-drawer" aria-label="Site navigation" aria-hidden="true">
+    <div class="drawer-heading">
+      <span class="stars" aria-hidden="true">✶</span>
+      <span>navigation</span>
+      <button class="drawer-close" id="drawer-close" type="button" aria-label="Close navigation menu">×</button>
+    </div>
+    <nav aria-label="Tools">
+      <a class="drawer-link" href="/">angle tools</a>
+      <a class="drawer-link" href="/tools/coordinates.html">coord converter</a>
+      <a class="drawer-link" href="/tools/redshift.html">redshift calc</a>
+      <a class="drawer-link" href="/tools/blackbodies.html">blackbody radiation</a>
+    </nav>
+  </aside>
+
+  <main>
+    <h1><span class="stars">✶</span> astronomy swissknife</h1>
+    <h2 id="blackbody-tools"><span class="stars">✶✶</span> blackbody radiation</h2>
+    <p>Calculate the spectral radiance of an ideal blackbody at a chosen temperature.</p>
+
+    <section class="converter" aria-labelledby="temperature-heading">
+      <h3 id="temperature-heading"><span class="stars">✶✶✶</span> Temperature</h3>
+      <label for="temperature">Temperature (K)</label>
+      <input id="temperature" class="text-field" type="number" min="0" step="any" value="5778" inputmode="decimal">
+      <p id="temperature-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="converter" aria-labelledby="frequency-heading">
+      <h3 id="frequency-heading"><span class="stars">✶✶✶</span> Spectral radiance by frequency</h3>
+      <img class="figures" style="display: block;" src="/public/bbbyfreq.png" alt="Planck's law for spectral radiance by frequency">
+      <label for="frequency">Frequency (&nu;, Hz)</label>
+      <input id="frequency" class="text-field" type="number" min="0" step="any" value="5e14" inputmode="decimal">
+      <p>Spectral radiance: <output id="frequency-result" for="temperature frequency">—</output></p>
+      <p>Units: W m<sup>&minus;2</sup> sr<sup>&minus;1</sup> Hz<sup>&minus;1</sup></p>
+    </section>
+
+    <section class="converter" aria-labelledby="wavelength-heading">
+      <h3 id="wavelength-heading"><span class="stars">✶✶✶</span> Spectral radiance by wavelength</h3>
+      <img class="figures" style="display: block;" src="/public/bbbywavelength.png" alt="Planck's law for spectral radiance by wavelength">
+      <label for="wavelength">Wavelength (&lambda;, nm)</label>
+      <input id="wavelength" class="text-field" type="number" min="0" step="any" value="500" inputmode="decimal">
+      <p>Spectral radiance: <output id="wavelength-result" for="temperature wavelength">—</output></p>
+      <p>Units: W m<sup>&minus;2</sup> sr<sup>&minus;1</sup> m<sup>&minus;1</sup></p>
+      <p>Per nanometer: <output id="wavelength-nm-result" for="temperature wavelength">—</output> W m<sup>&minus;2</sup> sr<sup>&minus;1</sup> nm<sup>&minus;1</sup></p>
+    </section>
+  </main>
+
+  <script>
+    const temperatureInput = document.getElementById('temperature');
+    const frequencyInput = document.getElementById('frequency');
+    const wavelengthInput = document.getElementById('wavelength');
+    const temperatureStatus = document.getElementById('temperature-status');
+    const frequencyResult = document.getElementById('frequency-result');
+    const wavelengthResult = document.getElementById('wavelength-result');
+    const wavelengthNmResult = document.getElementById('wavelength-nm-result');
+    const planckConstant = 6.62607015e-34;
+    const speedOfLight = 299792458;
+    const boltzmannConstant = 1.380649e-23;
+
+    function formatRadiance(value) {
+      return Number.isFinite(value) ? value.toExponential(6) : '—';
+    }
+
+    function planckRadiance(prefactor, exponent) {
+      if (exponent > 709) return 0;
+      return prefactor / Math.expm1(exponent);
+    }
+
+    function updateRadiance() {
+      const temperature = temperatureInput.valueAsNumber;
+      const frequency = frequencyInput.valueAsNumber;
+      const wavelengthNm = wavelengthInput.valueAsNumber;
+      const validTemperature = Number.isFinite(temperature) && temperature > 0;
+
+      temperatureStatus.textContent = validTemperature
+        ? ''
+        : 'Enter a finite temperature greater than 0 K.';
+
+      if (!validTemperature) {
+        frequencyResult.textContent = '—';
+        wavelengthResult.textContent = '—';
+        wavelengthNmResult.textContent = '—';
+        return;
+      }
+
+      if (Number.isFinite(frequency) && frequency > 0) {
+        const exponent = planckConstant * frequency / (boltzmannConstant * temperature);
+        const prefactor = 2 * planckConstant * frequency ** 3 / speedOfLight ** 2;
+        frequencyResult.textContent = formatRadiance(planckRadiance(prefactor, exponent));
+      } else {
+        frequencyResult.textContent = 'Enter a frequency greater than 0 Hz.';
+      }
+
+      if (Number.isFinite(wavelengthNm) && wavelengthNm > 0) {
+        const wavelength = wavelengthNm * 1e-9;
+        const exponent = planckConstant * speedOfLight / (wavelength * boltzmannConstant * temperature);
+        const prefactor = 2 * planckConstant * speedOfLight ** 2 / wavelength ** 5;
+        const radiancePerMeter = planckRadiance(prefactor, exponent);
+        wavelengthResult.textContent = formatRadiance(radiancePerMeter);
+        wavelengthNmResult.textContent = formatRadiance(radiancePerMeter * 1e-9);
+      } else {
+        wavelengthResult.textContent = 'Enter a wavelength greater than 0 nm.';
+        wavelengthNmResult.textContent = '—';
+      }
+    }
+
+    [temperatureInput, frequencyInput, wavelengthInput].forEach((input) => {
+      input.addEventListener('input', updateRadiance);
+    });
+    updateRadiance();
+  </script>
+  <script src="../navbar.js"></script>
+</body>
+</html>
