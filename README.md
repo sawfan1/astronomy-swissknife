@@ -17,5 +17,5 @@ The tool currently hosts 5 main features:
 5. Red shift calculation — Estimate the change in color of an object depending on source and observer velocity.
 
 ## Design Architecture
-The website is written in HTML5, CSS, and JS. The navbar logic resides in `navbar.js` and the `public` folder contains some images and equations. All the tools are in the `tools` folder.
+The website is written in HTML5, CSS, and JS. The navbar logic resides in `navbar.js` and the `public` folder contains some images and equations. All the tools are in the root `/` folder with their appropriate names.
 
