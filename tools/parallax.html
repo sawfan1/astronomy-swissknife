@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stellar Parallax Calculator</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <button class="drawer-toggle" id="drawer-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="side-drawer">
+    <span aria-hidden="true">☰</span>
+  </button>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="side-drawer" id="side-drawer" aria-label="Site navigation" aria-hidden="true">
+    <div class="drawer-heading">
+      <span class="stars" aria-hidden="true">✶</span>
+      <span>navigation</span>
+      <button class="drawer-close" id="drawer-close" type="button" aria-label="Close navigation menu">×</button>
+    </div>
+    <nav aria-label="Tools">
+      <a class="drawer-link" href='/'>angle tools</a>
+      <a class="drawer-link" href='/tools/coordinates.html'>coord converter</a>
+      <a class="drawer-link" href='/tools/redshift.html'>redshift calc</a>
+      <a class="drawer-link" href="/tools/blackbodies.html">blackbody radiation</a>
+      <a class="drawer-link" href="/tools/parallax.html">parallax calc</a>
+      <a class="drawer-link" href="/tools/luminosity.html">luminosity tools</a>
+    </nav>
+  </aside>
+
+  <main>
+    <h1><span class="stars">✶</span> astronomy swissknife</h1>
+    <h2 id="parallax-tools"><span class="stars">✶✶</span> stellar parallax calculator</h2>
+    <p>Estimate a star's distance from its measured annual parallax, or calculate the parallax expected for a known distance.</p>
+
+    <section class="converter" aria-labelledby="parallax-heading">
+      <h3 id="parallax-heading"><span class="stars">✶✶✶</span> Parallax to distance</h3>
+      <label for="parallax">Annual parallax (milliarcseconds, mas)</label>
+      <input id="parallax" class="text-field" type="number" min="0" step="any" value="10" inputmode="decimal">
+      <p id="parallax-status" role="status" aria-live="polite"></p>
+      <p>Distance: <output id="distance-pc" for="parallax">100</output> parsecs (pc)</p>
+      <p>Distance: <output id="distance-ly" for="parallax">326.156</output> light-years (ly)</p>
+      <p>Distance: <output id="distance-au" for="parallax">20626480.6</output> astronomical units (AU)</p>
+    </section>
+
+    <section class="converter" aria-labelledby="distance-heading">
+      <h3 id="distance-heading"><span class="stars">✶✶✶</span> Distance to parallax</h3>
+      <label for="distance-input">Distance (parsecs, pc)</label>
+      <input id="distance-input" class="text-field" type="number" min="0" step="any" value="100" inputmode="decimal">
+      <p id="distance-status" role="status" aria-live="polite"></p>
+      <p>Expected parallax: <output id="parallax-result" for="distance-input">10</output> milliarcseconds (mas)</p>
+    </section>
+
+    <section class="converter" aria-labelledby="formula-heading">
+      <h3 id="formula-heading"><span class="stars">✶✶✶</span> Formula</h3>
+      <p>For parallax measured in arcseconds, distance in parsecs is:</p>
+      <p><strong>d (pc) = 1 / p (arcseconds)</strong></p>
+      <p>Since 1 arcsecond = 1000 milliarcseconds, this calculator uses:</p>
+      <p><strong>d (pc) = 1000 / p (mas)</strong></p>
+      <p>This simple relation assumes the measured parallax is positive and sufficiently reliable. Very small or uncertain parallaxes can produce highly uncertain distances.</p>
+    </section>
+  </main>
+
+  <script>
+    const parallaxInput = document.getElementById('parallax');
+    const distanceInput = document.getElementById('distance-input');
+    const parallaxStatus = document.getElementById('parallax-status');
+    const distanceStatus = document.getElementById('distance-status');
+    const distancePc = document.getElementById('distance-pc');
+    const distanceLy = document.getElementById('distance-ly');
+    const distanceAu = document.getElementById('distance-au');
+    const parallaxResult = document.getElementById('parallax-result');
+
+    const lightYearsPerParsec = 3.26156;
+    const auPerParsec = 206264.806;
+
+    function formatResult(value) {
+      if (!Number.isFinite(value)) return '—';
+      return value.toLocaleString('en-US', {
+        maximumSignificantDigits: 8,
+        useGrouping: false
+      });
+    }
+
+    function updateDistanceFromParallax() {
+      const parallaxMas = parallaxInput.valueAsNumber;
+      const valid = Number.isFinite(parallaxMas) && parallaxMas > 0;
+      parallaxStatus.textContent = valid ? '' : 'Enter a parallax greater than 0 mas.';
+
+      if (!valid) {
+        distancePc.textContent = '—';
+        distanceLy.textContent = '—';
+        distanceAu.textContent = '—';
+        return;
+      }
+
+      const parsecs = 1000 / parallaxMas;
+      distancePc.textContent = formatResult(parsecs);
+      distanceLy.textContent = formatResult(parsecs * lightYearsPerParsec);
+      distanceAu.textContent = formatResult(parsecs * auPerParsec);
+    }
+
+    function updateParallaxFromDistance() {
+      const parsecs = distanceInput.valueAsNumber;
+      const valid = Number.isFinite(parsecs) && parsecs > 0;
+      distanceStatus.textContent = valid ? '' : 'Enter a distance greater than 0 pc.';
+      parallaxResult.textContent = valid ? formatResult(1000 / parsecs) : '—';
+    }
+
+    parallaxInput.addEventListener('input', updateDistanceFromParallax);
+    distanceInput.addEventListener('input', updateParallaxFromDistance);
+    updateDistanceFromParallax();
+    updateParallaxFromDistance();
+  </script>
+  <script src="../navbar.js"></script>
+</body>
+</html>

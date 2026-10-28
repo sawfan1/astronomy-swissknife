@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luminosity & Magnitude Calculator</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <button class="drawer-toggle" id="drawer-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="side-drawer">
+    <span aria-hidden="true">☰</span>
+  </button>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="side-drawer" id="side-drawer" aria-label="Site navigation" aria-hidden="true">
+    <div class="drawer-heading">
+      <span class="stars" aria-hidden="true">✶</span>
+      <span>navigation</span>
+      <button class="drawer-close" id="drawer-close" type="button" aria-label="Close navigation menu">×</button>
+    </div>
+    <nav aria-label="Tools">
+      <a class="drawer-link" href='/'>angle tools</a>
+      <a class="drawer-link" href='/tools/coordinates.html'>coord converter</a>
+      <a class="drawer-link" href='/tools/redshift.html'>redshift calc</a>
+      <a class="drawer-link" href="/tools/blackbodies.html">blackbody radiation</a>
+      <a class="drawer-link" href="/tools/parallax.html">parallax calc</a>
+      <a class="drawer-link" href="/tools/luminosity.html">luminosity tools</a>
+    </nav>
+  </aside>
+
+  <main>
+    <h1><span class="stars">✶</span> astronomy swissknife</h1>
+    <h2 id="luminosity-tools"><span class="stars">✶✶</span> luminosity &amp; magnitude calculator</h2>
+    <p>Calculate a star's absolute magnitude, distance modulus, and total radiative energy output relative to the Sun.</p>
+
+    <section class="converter" aria-labelledby="absolute-mag-heading">
+      <h3 id="absolute-mag-heading"><span class="stars">✶✶✶</span> Absolute magnitude to luminosity</h3>
+      <label for="absolute-magnitude">Absolute magnitude (M)</label>
+      <input id="absolute-magnitude" class="text-field" type="number" step="any" value="4.83" inputmode="decimal">
+      <p id="abs-mag-status" role="status" aria-live="polite"></p>
+      <p>Luminosity: <output id="luminosity-solar" for="absolute-magnitude">1.000000</output> L<sub>☉</sub></p>
+      <p>Luminosity: <output id="luminosity-watts" for="absolute-magnitude">3.828000e+26</output> W</p>
+    </section>
+
+    <section class="converter" aria-labelledby="distance-modulus-heading">
+      <h3 id="distance-modulus-heading"><span class="stars">✶✶✶</span> Apparent magnitude &amp; distance to absolute magnitude</h3>
+      <label for="apparent-magnitude">Apparent magnitude (m)</label>
+      <input id="apparent-magnitude" class="text-field" type="number" step="any" value="-26.74" inputmode="decimal">
+
+      <label for="distance-pc" style="margin-top: 15px; display: block;">Distance (parsecs, pc)</label>
+      <input style="margin-top: 20px;" id="distance-pc" class="text-field" type="number" min="0" step="any" value="0.000004848" inputmode="decimal">
+      <p id="distance-modulus-status" role="status" aria-live="polite"></p>
+      <p>Distance modulus (m &minus; M): <output id="distance-modulus" for="apparent-magnitude distance-pc">-31.57</output></p>
+      <p>Absolute magnitude (M): <output id="calculated-abs-mag" for="apparent-magnitude distance-pc">4.83</output></p>
+      <p>Calculated luminosity: <output id="calculated-luminosity" for="apparent-magnitude distance-pc">1.000000</output> L<sub>☉</sub></p>
+    </section>
+
+    <section class="converter" aria-labelledby="formulas-heading">
+      <h3 id="formulas-heading"><span class="stars">✶✶✶</span> Formulas</h3>
+      <p>Distance Modulus Equation:</p>
+      <p><strong>m &minus; M = 5 log<sub>10</sub>(d) &minus; 5</strong></p>
+      <p>Luminosity Ratio (relative to Solar Absolute Magnitude M<sub>☉</sub> = 4.83):</p>
+      <p><strong>L / L<sub>☉</sub> = 10<sup>0.4 (M<sub>☉</sub> &minus; M)</sup></strong></p>
+      <p>Where 1 L<sub>☉</sub> &approx; 3.828 &times; 10<sup>26</sup> W.</p>
+    </section>
+  </main>
+
+  <script>
+    const absMagInput = document.getElementById('absolute-magnitude');
+    const appMagInput = document.getElementById('apparent-magnitude');
+    const distancePcInput = document.getElementById('distance-pc');
+
+    const absMagStatus = document.getElementById('abs-mag-status');
+    const distModStatus = document.getElementById('distance-modulus-status');
+
+    const luminositySolar = document.getElementById('luminosity-solar');
+    const luminosityWatts = document.getElementById('luminosity-watts');
+    const distanceModulus = document.getElementById('distance-modulus');
+    const calculatedAbsMag = document.getElementById('calculated-abs-mag');
+    const calculatedLuminosity = document.getElementById('calculated-luminosity');
+
+    const solarAbsMag = 4.83;
+    const solarLuminosityWatts = 3.828e26;
+
+    function formatNumber(value, maxDigits = 6) {
+      if (!Number.isFinite(value)) return '—';
+      if (Math.abs(value) >= 1e6 || (Math.abs(value) < 1e-4 && value !== 0)) {
+        return value.toExponential(maxDigits);
+      }
+      return value.toFixed(maxDigits);
+    }
+
+    function updateLuminosityFromAbsMag() {
+      const M = absMagInput.valueAsNumber;
+      const valid = Number.isFinite(M);
+
+      absMagStatus.textContent = valid ? '' : 'Enter a valid finite magnitude.'; // error hadling
+
+      if (!valid) {
+        luminositySolar.textContent = '—';
+        luminosityWatts.textContent = '—';
+        return;
+      }
+
+      const lSolar = Math.pow(10, 0.4 * (solarAbsMag - M));
+      const lWatts = lSolar * solarLuminosityWatts;
+
+      luminositySolar.textContent = formatNumber(lSolar, 6);
+      luminosityWatts.textContent = lWatts.toExponential(6);
+    }
+
+    // update
+
+    function updateFromApparentAndDistance() {
+      const m = appMagInput.valueAsNumber;
+      const d = distancePcInput.valueAsNumber;
+
+      const validM = Number.isFinite(m);
+      const validD = Number.isFinite(d) && d > 0
+
+      if (!validM || !validD) {
+        distModStatus.textContent =!validD 
+          ? 'Enter a distance greater than 0 pc.' 
+          : 'Enter a valid apparent magnitude.';
+        distanceModulus.textContent = '—';
+        calculatedAbsMag.textContent = '—';
+        calculatedLuminosity.textContent = '—';
+        return;
+      }
+
+      distModStatus.textContent = '';
+
+      const mu = 5 * Math.log10(d) - 5;
+      const M = m - mu;
+      const lSolar = Math.pow(10, 0.4 * (solarAbsMag - M));
+
+      distanceModulus.textContent = formatNumber(mu, 2);
+      calculatedAbsMag.textContent = formatNumber(M, 2);
+      calculatedLuminosity.textContent = formatNumber(lSolar, 6);
+    }
+
+    absMagInput.addEventListener('input', updateLuminosityFromAbsMag);
+    appMagInput.addEventListener('input', updateFromApparentAndDistance);
+    distancePcInput.addEventListener('input', updateFromApparentAndDistance);
+
+    updateLuminosityFromAbsMag();
+    updateFromApparentAndDistance();
+  </script>
+  <script src="../navbar.js"></script>
+</body>
+</html>
